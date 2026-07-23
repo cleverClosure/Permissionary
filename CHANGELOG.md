@@ -31,4 +31,6 @@ releases may contain breaking changes; pin an exact version.
   application becomes active.
 - Injectable `PermissionsClient` built from replaceable operations, with no global singleton.
 - Privacy manifest declaring no tracking, no data collection, and no required-reason APIs.
+- DocC catalog organizing the public API; the documentation build runs in CI with warnings
+  treated as errors.
 - Demo app exercising every capability and a device verification checklist gating releases.
