@@ -26,6 +26,21 @@ Permissionary is in a pre-development design phase. The most valuable contributi
 6. Add a demo app screen and manual checklist entries
 7. Verify on a physical device and document the results
 
+## Git workflow
+
+The process is intentionally small:
+
+1. Branch from `main`: `feature/<name>`, `fix/<name>`, or `docs/<name>`
+2. Open a pull request; CI must pass
+3. Squash merge; delete the branch
+4. `main` is always releasable: green build and tests at every commit
+
+There are no long-lived branches. Releases are semantic-version tags on
+`main`; before 1.0, minor versions may contain breaking changes.
+
+Commit messages use the imperative mood ("Add camera adapter") with a body
+when the change needs explanation.
+
 ## Pull requests
 
 - Keep changes focused; one capability or concern per pull request
