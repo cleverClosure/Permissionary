@@ -365,9 +365,7 @@ Changing add-only access in Settings is expected to terminate a suspended app. V
 
 ### Native states
 
-Verify against the deployment SDK, including any modern limited-access state.
-
-Expected categories:
+Confirmed against the deployment SDK; the limited state exists as a first-class authorization value.
 
 - Not determined
 - Limited
@@ -406,7 +404,7 @@ Changing contacts access in Settings is expected to terminate a suspended app. V
 
 ### Framework
 
-Use the current non-deprecated API available in the deployment SDK.
+`AVFAudio`, through the application-level record-permission API introduced alongside iOS 17. The adapter does not use the deprecated session-level API.
 
 ### Configuration
 
