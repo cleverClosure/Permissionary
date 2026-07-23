@@ -22,6 +22,9 @@ public struct PermissionsClient: Sendable {
     /// The always location capability.
     public var locationAlways: LocationAlwaysPermission
 
+    /// The notifications capability.
+    public var notifications: NotificationsPermission
+
     /// The photo library read/write capability.
     public var photosReadWrite: PhotosReadWritePermission
 
@@ -50,6 +53,7 @@ public struct PermissionsClient: Sendable {
     ///   - camera: The camera capability.
     ///   - locationWhenInUse: The when-in-use location capability.
     ///   - locationAlways: The always location capability.
+    ///   - notifications: The notifications capability.
     ///   - photosReadWrite: The photo library read/write capability.
     ///   - photosAddOnly: The photo library add-only capability.
     ///   - contacts: The contacts capability.
@@ -60,6 +64,7 @@ public struct PermissionsClient: Sendable {
         camera: CameraPermission,
         locationWhenInUse: LocationWhenInUsePermission,
         locationAlways: LocationAlwaysPermission,
+        notifications: NotificationsPermission,
         photosReadWrite: PhotosReadWritePermission,
         photosAddOnly: PhotosAddOnlyPermission,
         contacts: ContactsPermission,
@@ -70,6 +75,7 @@ public struct PermissionsClient: Sendable {
         self.camera = camera
         self.locationWhenInUse = locationWhenInUse
         self.locationAlways = locationAlways
+        self.notifications = notifications
         self.photosReadWrite = photosReadWrite
         self.photosAddOnly = photosAddOnly
         self.contacts = contacts

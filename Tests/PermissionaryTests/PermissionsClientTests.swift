@@ -50,6 +50,24 @@ private enum Fixture {
                     )
                 }
             ),
+            notifications: NotificationsPermission(
+                status: {
+                    NotificationsStatus(
+                        authorization: .notDetermined,
+                        grant: nil,
+                        settings: .allDisabled,
+                        recovery: nil
+                    )
+                },
+                request: { _ in
+                    NotificationsStatus(
+                        authorization: .notDetermined,
+                        grant: nil,
+                        settings: .allDisabled,
+                        recovery: nil
+                    )
+                }
+            ),
             photosReadWrite: PhotosReadWritePermission(
                 status: { PhotosReadWriteStatus(authorization: .notDetermined, recovery: nil) },
                 request: { PhotosReadWriteStatus(authorization: .notDetermined, recovery: nil) }
