@@ -73,7 +73,9 @@ Do not test Apple system prompts through ordinary SwiftUI unit tests.
 
 ### 5. Demo-app verification
 
-The demo app is the manual integration harness.
+The demo app is the manual integration harness. It lives in
+`Examples/PermissionaryDemo` and drives every capability through the
+library's observable models and environment injection.
 
 Each permission screen should display:
 
@@ -155,7 +157,7 @@ CI should run:
 
 System-prompt automation through UI-test interruption monitors may run as a non-blocking nightly job. It is inherently flaky and must never gate a release.
 
-Do not pretend CI can fully validate system permission prompts. Maintain a release checklist for manual device verification.
+Do not pretend CI can fully validate system permission prompts. Maintain a release checklist for manual device verification: [DEVICE_CHECKLIST.md](DEVICE_CHECKLIST.md).
 
 ## Release test gate
 
