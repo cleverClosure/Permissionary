@@ -48,7 +48,7 @@ extension MicrophonePermission {
                 try await coalescer.run {
                     try await coordination.serializer.run {
                         let status = try await PromptOnceRequest.run(
-                            usageDescriptionKey: "NSMicrophoneUsageDescription",
+                            usageDescriptionKey: UsageDescriptionKey.microphone,
                             infoPlist: infoPlist,
                             readNative: shim.recordPermission,
                             canPrompt: { $0 == .undetermined },

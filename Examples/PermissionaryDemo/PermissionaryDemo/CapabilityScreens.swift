@@ -16,7 +16,7 @@ struct CameraScreen: View {
     var body: some View {
         CapabilityScreen(
             title: "Camera",
-            usageKeys: ["NSCameraUsageDescription"],
+            usageKeys: [UsageDescriptionKey.camera],
             status: model.status,
             request: { try await model.request() },
             refresh: { await model.refresh() }
@@ -31,7 +31,7 @@ struct MicrophoneScreen: View {
     var body: some View {
         CapabilityScreen(
             title: "Microphone",
-            usageKeys: ["NSMicrophoneUsageDescription"],
+            usageKeys: [UsageDescriptionKey.microphone],
             status: model.status,
             request: { try await model.request() },
             refresh: { await model.refresh() }
@@ -48,7 +48,7 @@ struct PhotosReadWriteScreen: View {
     var body: some View {
         CapabilityScreen(
             title: "Photos Read/Write",
-            usageKeys: ["NSPhotoLibraryUsageDescription"],
+            usageKeys: [UsageDescriptionKey.photoLibrary],
             status: model.status,
             note: "Limited access is a successful state with its own recovery action.",
             request: { try await model.request() },
@@ -66,7 +66,7 @@ struct PhotosAddOnlyScreen: View {
     var body: some View {
         CapabilityScreen(
             title: "Photos Add Only",
-            usageKeys: ["NSPhotoLibraryAddUsageDescription"],
+            usageKeys: [UsageDescriptionKey.photoLibraryAdd],
             status: model.status,
             note: "Add-only access is independent of read/write access.",
             request: { try await model.request() },
@@ -84,7 +84,7 @@ struct ContactsScreen: View {
     var body: some View {
         CapabilityScreen(
             title: "Contacts",
-            usageKeys: ["NSContactsUsageDescription"],
+            usageKeys: [UsageDescriptionKey.contacts],
             status: model.status,
             note: "Limited access shares only the contacts the user selected.",
             request: { try await model.request() },
@@ -103,7 +103,7 @@ struct LocationWhenInUseScreen: View {
     var body: some View {
         CapabilityScreen(
             title: "Location When In Use",
-            usageKeys: ["NSLocationWhenInUseUsageDescription"],
+            usageKeys: [UsageDescriptionKey.locationWhenInUse],
             status: model.status,
             note: "An Always grant satisfies this capability and reports as authorized.",
             request: { try await model.request() },
@@ -123,8 +123,8 @@ struct LocationAlwaysScreen: View {
         CapabilityScreen(
             title: "Location Always",
             usageKeys: [
-                "NSLocationWhenInUseUsageDescription",
-                "NSLocationAlwaysAndWhenInUseUsageDescription",
+                UsageDescriptionKey.locationWhenInUse,
+                UsageDescriptionKey.locationAlwaysAndWhenInUse,
             ],
             status: model.status,
             note: "A when-in-use grant reports as limited. The system shows the upgrade "
@@ -145,7 +145,7 @@ struct TrackingScreen: View {
     var body: some View {
         CapabilityScreen(
             title: "Tracking",
-            usageKeys: ["NSUserTrackingUsageDescription"],
+            usageKeys: [UsageDescriptionKey.tracking],
             status: model.status,
             note: "The prompt requires an active application and the system-wide "
                 + "Allow Apps to Request to Track switch.",

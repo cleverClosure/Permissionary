@@ -49,7 +49,7 @@ extension CameraPermission {
                 try await coalescer.run {
                     try await coordination.serializer.run {
                         let status = try await PromptOnceRequest.run(
-                            usageDescriptionKey: "NSCameraUsageDescription",
+                            usageDescriptionKey: UsageDescriptionKey.camera,
                             infoPlist: infoPlist,
                             readNative: shim.authorizationStatus,
                             canPrompt: { $0 == .notDetermined },

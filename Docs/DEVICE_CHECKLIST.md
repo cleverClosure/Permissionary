@@ -33,6 +33,7 @@ candidate needs a pass on the current iOS release and the minimum supported rele
 - [ ] Fresh install: every list row shows `notDetermined` and no prompt appears at launch.
 - [ ] Opening every capability screen presents no prompt: status reads never request.
 - [ ] Every Configuration row shows a green check: all usage keys ship in the demo Info.plist.
+- [ ] The Diagnostics lab screen reports no configuration issues.
 - [ ] Activation refresh: with notifications granted, disable Sounds in Settings >
       Notifications > PermissionaryDemo, return to the app without relaunching. The settings
       snapshot updates. The demo contains no scene-phase code; the live client republishes on

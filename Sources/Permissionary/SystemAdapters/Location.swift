@@ -139,8 +139,8 @@ extension LocationAlwaysStatus {
 }
 
 enum LocationRequestFlow {
-    static let whenInUseKey = "NSLocationWhenInUseUsageDescription"
-    static let alwaysKey = "NSLocationAlwaysAndWhenInUseUsageDescription"
+    static let whenInUseKey = UsageDescriptionKey.locationWhenInUse
+    static let alwaysKey = UsageDescriptionKey.locationAlwaysAndWhenInUse
 
     static func validate(keys: [String], infoPlist: InfoPlistReader) throws {
         for key in keys {
