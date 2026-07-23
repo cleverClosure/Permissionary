@@ -131,16 +131,27 @@ extension NotificationOptions {
 }
 
 extension NotificationsPermission {
-    static func adapter(shim: NotificationCenterShim) -> NotificationsPermission {
-        NotificationsPermission(
+    static func adapter(
+        shim: NotificationCenterShim,
+        coordination: RequestCoordination = RequestCoordination()
+    ) -> NotificationsPermission {
+        let coalescer = RequestCoalescer<NotificationsStatus>()
+        return NotificationsPermission(
             status: {
                 let current = await shim.read()
                 return NotificationsStatus(native: current.status, settings: current.settings)
             },
             request: { options in
-                await shim.requestAuthorization(options.native)
-                let final = await shim.read()
-                return NotificationsStatus(native: final.status, settings: final.settings)
+                try await coalescer.run {
+                    await coordination.serializer.run {
+                        await shim.requestAuthorization(options.native)
+                        let final = await shim.read()
+                        return NotificationsStatus(native: final.status, settings: final.settings)
+                    }
+                } ifCancelled: {
+                    let current = await shim.read()
+                    return NotificationsStatus(native: current.status, settings: current.settings)
+                }
             }
         )
     }

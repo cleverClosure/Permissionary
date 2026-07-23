@@ -11,16 +11,29 @@ extension PermissionsClient {
     /// A client backed by the real system frameworks.
     public static let live: PermissionsClient = {
         let location = LocationShim.live
+        let coordination = RequestCoordination()
         return PermissionsClient(
-            camera: .adapter(shim: .live, infoPlist: .live),
-            locationWhenInUse: .adapter(shim: location, infoPlist: .live),
-            locationAlways: .adapter(shim: location, infoPlist: .live),
-            notifications: .adapter(shim: .live),
-            photosReadWrite: .adapter(shim: .live(access: .readWrite), infoPlist: .live),
-            photosAddOnly: .adapter(shim: .live(access: .addOnly), infoPlist: .live),
-            contacts: .adapter(shim: .live, infoPlist: .live),
-            microphone: .adapter(shim: .live, infoPlist: .live),
-            tracking: .adapter(shim: .live, infoPlist: .live),
+            camera: .adapter(shim: .live, infoPlist: .live, coordination: coordination),
+            locationWhenInUse: .adapter(
+                shim: location,
+                infoPlist: .live,
+                coordination: coordination
+            ),
+            locationAlways: .adapter(shim: location, infoPlist: .live, coordination: coordination),
+            notifications: .adapter(shim: .live, coordination: coordination),
+            photosReadWrite: .adapter(
+                shim: .live(access: .readWrite),
+                infoPlist: .live,
+                coordination: coordination
+            ),
+            photosAddOnly: .adapter(
+                shim: .live(access: .addOnly),
+                infoPlist: .live,
+                coordination: coordination
+            ),
+            contacts: .adapter(shim: .live, infoPlist: .live, coordination: coordination),
+            microphone: .adapter(shim: .live, infoPlist: .live, coordination: coordination),
+            tracking: .adapter(shim: .live, infoPlist: .live, coordination: coordination),
             openSettings: { await PermissionsClient.openSystemSettings() }
         )
     }()

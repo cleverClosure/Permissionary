@@ -31,18 +31,29 @@ extension MicrophoneStatus {
 }
 
 extension MicrophonePermission {
-    static func adapter(shim: MicrophoneShim, infoPlist: InfoPlistReader) -> MicrophonePermission {
-        MicrophonePermission(
+    static func adapter(
+        shim: MicrophoneShim,
+        infoPlist: InfoPlistReader,
+        coordination: RequestCoordination = RequestCoordination()
+    ) -> MicrophonePermission {
+        let coalescer = RequestCoalescer<MicrophoneStatus>()
+        return MicrophonePermission(
             status: { MicrophoneStatus(native: shim.recordPermission()) },
             request: {
-                try await PromptOnceRequest.run(
-                    usageDescriptionKey: "NSMicrophoneUsageDescription",
-                    infoPlist: infoPlist,
-                    readNative: shim.recordPermission,
-                    canPrompt: { $0 == .undetermined },
-                    prompt: { _ = await shim.requestRecordPermission() },
-                    makeStatus: { MicrophoneStatus(native: $0) }
-                )
+                try await coalescer.run {
+                    try await coordination.serializer.run {
+                        try await PromptOnceRequest.run(
+                            usageDescriptionKey: "NSMicrophoneUsageDescription",
+                            infoPlist: infoPlist,
+                            readNative: shim.recordPermission,
+                            canPrompt: { $0 == .undetermined },
+                            prompt: { _ = await shim.requestRecordPermission() },
+                            makeStatus: { MicrophoneStatus(native: $0) }
+                        )
+                    }
+                } ifCancelled: {
+                    MicrophoneStatus(native: shim.recordPermission())
+                }
             }
         )
     }

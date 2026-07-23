@@ -52,19 +52,27 @@ extension PhotosAddOnlyStatus {
 extension PhotosReadWritePermission {
     static func adapter(
         shim: PhotoLibraryShim,
-        infoPlist: InfoPlistReader
+        infoPlist: InfoPlistReader,
+        coordination: RequestCoordination = RequestCoordination()
     ) -> PhotosReadWritePermission {
-        PhotosReadWritePermission(
+        let coalescer = RequestCoalescer<PhotosReadWriteStatus>()
+        return PhotosReadWritePermission(
             status: { PhotosReadWriteStatus(native: shim.authorizationStatus()) },
             request: {
-                try await PromptOnceRequest.run(
-                    usageDescriptionKey: "NSPhotoLibraryUsageDescription",
-                    infoPlist: infoPlist,
-                    readNative: shim.authorizationStatus,
-                    canPrompt: { $0 == .notDetermined },
-                    prompt: shim.requestAuthorization,
-                    makeStatus: { PhotosReadWriteStatus(native: $0) }
-                )
+                try await coalescer.run {
+                    try await coordination.serializer.run {
+                        try await PromptOnceRequest.run(
+                            usageDescriptionKey: "NSPhotoLibraryUsageDescription",
+                            infoPlist: infoPlist,
+                            readNative: shim.authorizationStatus,
+                            canPrompt: { $0 == .notDetermined },
+                            prompt: shim.requestAuthorization,
+                            makeStatus: { PhotosReadWriteStatus(native: $0) }
+                        )
+                    }
+                } ifCancelled: {
+                    PhotosReadWriteStatus(native: shim.authorizationStatus())
+                }
             }
         )
     }
@@ -73,19 +81,27 @@ extension PhotosReadWritePermission {
 extension PhotosAddOnlyPermission {
     static func adapter(
         shim: PhotoLibraryShim,
-        infoPlist: InfoPlistReader
+        infoPlist: InfoPlistReader,
+        coordination: RequestCoordination = RequestCoordination()
     ) -> PhotosAddOnlyPermission {
-        PhotosAddOnlyPermission(
+        let coalescer = RequestCoalescer<PhotosAddOnlyStatus>()
+        return PhotosAddOnlyPermission(
             status: { PhotosAddOnlyStatus(native: shim.authorizationStatus()) },
             request: {
-                try await PromptOnceRequest.run(
-                    usageDescriptionKey: "NSPhotoLibraryAddUsageDescription",
-                    infoPlist: infoPlist,
-                    readNative: shim.authorizationStatus,
-                    canPrompt: { $0 == .notDetermined },
-                    prompt: shim.requestAuthorization,
-                    makeStatus: { PhotosAddOnlyStatus(native: $0) }
-                )
+                try await coalescer.run {
+                    try await coordination.serializer.run {
+                        try await PromptOnceRequest.run(
+                            usageDescriptionKey: "NSPhotoLibraryAddUsageDescription",
+                            infoPlist: infoPlist,
+                            readNative: shim.authorizationStatus,
+                            canPrompt: { $0 == .notDetermined },
+                            prompt: shim.requestAuthorization,
+                            makeStatus: { PhotosAddOnlyStatus(native: $0) }
+                        )
+                    }
+                } ifCancelled: {
+                    PhotosAddOnlyStatus(native: shim.authorizationStatus())
+                }
             }
         )
     }
