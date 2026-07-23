@@ -19,16 +19,25 @@ public struct PhotosAddOnlyPermission: Sendable {
     /// would be needed but `NSPhotoLibraryAddUsageDescription` is missing.
     public var request: @Sendable () async throws -> PhotosAddOnlyStatus
 
+    /// Returns a stream of status snapshots for observation.
+    ///
+    /// The stream emits whenever a status read or a completed request
+    /// produces a fresh snapshot. It never prompts.
+    public var updates: @Sendable () async -> AsyncStream<PhotosAddOnlyStatus>
+
     /// Creates a capability from its operations.
     ///
     /// - Parameters:
     ///   - status: Reads the current status.
     ///   - request: Requests access.
+    ///   - updates: Returns a stream of status snapshots.
     public init(
         status: @escaping @Sendable () async -> PhotosAddOnlyStatus,
-        request: @escaping @Sendable () async throws -> PhotosAddOnlyStatus
+        request: @escaping @Sendable () async throws -> PhotosAddOnlyStatus,
+        updates: @escaping @Sendable () async -> AsyncStream<PhotosAddOnlyStatus>
     ) {
         self.status = status
         self.request = request
+        self.updates = updates
     }
 }

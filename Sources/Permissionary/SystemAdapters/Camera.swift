@@ -38,12 +38,17 @@ extension CameraPermission {
         coordination: RequestCoordination = RequestCoordination()
     ) -> CameraPermission {
         let coalescer = RequestCoalescer<CameraStatus>()
+        let hub = StatusHub<CameraStatus>()
         return CameraPermission(
-            status: { CameraStatus(native: shim.authorizationStatus()) },
+            status: {
+                let status = CameraStatus(native: shim.authorizationStatus())
+                await hub.publish(status)
+                return status
+            },
             request: {
                 try await coalescer.run {
                     try await coordination.serializer.run {
-                        try await PromptOnceRequest.run(
+                        let status = try await PromptOnceRequest.run(
                             usageDescriptionKey: "NSCameraUsageDescription",
                             infoPlist: infoPlist,
                             readNative: shim.authorizationStatus,
@@ -51,11 +56,14 @@ extension CameraPermission {
                             prompt: { _ = await shim.requestAccess() },
                             makeStatus: { CameraStatus(native: $0) }
                         )
+                        await hub.publish(status)
+                        return status
                     }
                 } ifCancelled: {
                     CameraStatus(native: shim.authorizationStatus())
                 }
-            }
+            },
+            updates: { await hub.stream() }
         )
     }
 }

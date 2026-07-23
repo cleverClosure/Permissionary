@@ -37,12 +37,17 @@ extension MicrophonePermission {
         coordination: RequestCoordination = RequestCoordination()
     ) -> MicrophonePermission {
         let coalescer = RequestCoalescer<MicrophoneStatus>()
+        let hub = StatusHub<MicrophoneStatus>()
         return MicrophonePermission(
-            status: { MicrophoneStatus(native: shim.recordPermission()) },
+            status: {
+                let status = MicrophoneStatus(native: shim.recordPermission())
+                await hub.publish(status)
+                return status
+            },
             request: {
                 try await coalescer.run {
                     try await coordination.serializer.run {
-                        try await PromptOnceRequest.run(
+                        let status = try await PromptOnceRequest.run(
                             usageDescriptionKey: "NSMicrophoneUsageDescription",
                             infoPlist: infoPlist,
                             readNative: shim.recordPermission,
@@ -50,11 +55,14 @@ extension MicrophonePermission {
                             prompt: { _ = await shim.requestRecordPermission() },
                             makeStatus: { MicrophoneStatus(native: $0) }
                         )
+                        await hub.publish(status)
+                        return status
                     }
                 } ifCancelled: {
                     MicrophoneStatus(native: shim.recordPermission())
                 }
-            }
+            },
+            updates: { await hub.stream() }
         )
     }
 }

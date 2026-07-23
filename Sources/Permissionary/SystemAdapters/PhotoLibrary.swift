@@ -56,12 +56,17 @@ extension PhotosReadWritePermission {
         coordination: RequestCoordination = RequestCoordination()
     ) -> PhotosReadWritePermission {
         let coalescer = RequestCoalescer<PhotosReadWriteStatus>()
+        let hub = StatusHub<PhotosReadWriteStatus>()
         return PhotosReadWritePermission(
-            status: { PhotosReadWriteStatus(native: shim.authorizationStatus()) },
+            status: {
+                let status = PhotosReadWriteStatus(native: shim.authorizationStatus())
+                await hub.publish(status)
+                return status
+            },
             request: {
                 try await coalescer.run {
                     try await coordination.serializer.run {
-                        try await PromptOnceRequest.run(
+                        let status = try await PromptOnceRequest.run(
                             usageDescriptionKey: "NSPhotoLibraryUsageDescription",
                             infoPlist: infoPlist,
                             readNative: shim.authorizationStatus,
@@ -69,11 +74,14 @@ extension PhotosReadWritePermission {
                             prompt: shim.requestAuthorization,
                             makeStatus: { PhotosReadWriteStatus(native: $0) }
                         )
+                        await hub.publish(status)
+                        return status
                     }
                 } ifCancelled: {
                     PhotosReadWriteStatus(native: shim.authorizationStatus())
                 }
-            }
+            },
+            updates: { await hub.stream() }
         )
     }
 }
@@ -85,12 +93,17 @@ extension PhotosAddOnlyPermission {
         coordination: RequestCoordination = RequestCoordination()
     ) -> PhotosAddOnlyPermission {
         let coalescer = RequestCoalescer<PhotosAddOnlyStatus>()
+        let hub = StatusHub<PhotosAddOnlyStatus>()
         return PhotosAddOnlyPermission(
-            status: { PhotosAddOnlyStatus(native: shim.authorizationStatus()) },
+            status: {
+                let status = PhotosAddOnlyStatus(native: shim.authorizationStatus())
+                await hub.publish(status)
+                return status
+            },
             request: {
                 try await coalescer.run {
                     try await coordination.serializer.run {
-                        try await PromptOnceRequest.run(
+                        let status = try await PromptOnceRequest.run(
                             usageDescriptionKey: "NSPhotoLibraryAddUsageDescription",
                             infoPlist: infoPlist,
                             readNative: shim.authorizationStatus,
@@ -98,11 +111,14 @@ extension PhotosAddOnlyPermission {
                             prompt: shim.requestAuthorization,
                             makeStatus: { PhotosAddOnlyStatus(native: $0) }
                         )
+                        await hub.publish(status)
+                        return status
                     }
                 } ifCancelled: {
                     PhotosAddOnlyStatus(native: shim.authorizationStatus())
                 }
-            }
+            },
+            updates: { await hub.stream() }
         )
     }
 }

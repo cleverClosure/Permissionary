@@ -22,16 +22,26 @@ public struct LocationWhenInUsePermission: Sendable {
     /// is missing.
     public var request: @Sendable () async throws -> LocationWhenInUseStatus
 
+    /// Returns a stream of status snapshots for observation.
+    ///
+    /// The stream emits whenever a status read, a completed request, or
+    /// a system authorization change produces a fresh snapshot. It never
+    /// prompts.
+    public var updates: @Sendable () async -> AsyncStream<LocationWhenInUseStatus>
+
     /// Creates a capability from its operations.
     ///
     /// - Parameters:
     ///   - status: Reads the current status.
     ///   - request: Requests access.
+    ///   - updates: Returns a stream of status snapshots.
     public init(
         status: @escaping @Sendable () async -> LocationWhenInUseStatus,
-        request: @escaping @Sendable () async throws -> LocationWhenInUseStatus
+        request: @escaping @Sendable () async throws -> LocationWhenInUseStatus,
+        updates: @escaping @Sendable () async -> AsyncStream<LocationWhenInUseStatus>
     ) {
         self.status = status
         self.request = request
+        self.updates = updates
     }
 }

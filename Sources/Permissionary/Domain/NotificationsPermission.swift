@@ -20,17 +20,26 @@ public struct NotificationsPermission: Sendable {
     /// status. Notifications require no usage-description key.
     public var request: @Sendable (NotificationOptions) async throws -> NotificationsStatus
 
+    /// Returns a stream of status snapshots for observation.
+    ///
+    /// The stream emits whenever a status read or a completed request
+    /// produces a fresh snapshot. It never prompts.
+    public var updates: @Sendable () async -> AsyncStream<NotificationsStatus>
+
     /// Creates a capability from its operations.
     ///
     /// - Parameters:
     ///   - status: Reads the current status.
     ///   - request: Requests authorization with options.
+    ///   - updates: Returns a stream of status snapshots.
     public init(
         status: @escaping @Sendable () async -> NotificationsStatus,
-        request: @escaping @Sendable (NotificationOptions) async throws -> NotificationsStatus
+        request: @escaping @Sendable (NotificationOptions) async throws -> NotificationsStatus,
+        updates: @escaping @Sendable () async -> AsyncStream<NotificationsStatus>
     ) {
         self.status = status
         self.request = request
+        self.updates = updates
     }
 
     /// Requests notification authorization with the standard options:

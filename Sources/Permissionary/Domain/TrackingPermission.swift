@@ -21,16 +21,25 @@ public struct TrackingPermission: Sendable {
     /// would be needed but `NSUserTrackingUsageDescription` is missing.
     public var request: @Sendable () async throws -> TrackingStatus
 
+    /// Returns a stream of status snapshots for observation.
+    ///
+    /// The stream emits whenever a status read or a completed request
+    /// produces a fresh snapshot. It never prompts.
+    public var updates: @Sendable () async -> AsyncStream<TrackingStatus>
+
     /// Creates a capability from its operations.
     ///
     /// - Parameters:
     ///   - status: Reads the current status.
     ///   - request: Requests access.
+    ///   - updates: Returns a stream of status snapshots.
     public init(
         status: @escaping @Sendable () async -> TrackingStatus,
-        request: @escaping @Sendable () async throws -> TrackingStatus
+        request: @escaping @Sendable () async throws -> TrackingStatus,
+        updates: @escaping @Sendable () async -> AsyncStream<TrackingStatus>
     ) {
         self.status = status
         self.request = request
+        self.updates = updates
     }
 }

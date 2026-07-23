@@ -19,16 +19,25 @@ public struct MicrophonePermission: Sendable {
     /// would be needed but `NSMicrophoneUsageDescription` is missing.
     public var request: @Sendable () async throws -> MicrophoneStatus
 
+    /// Returns a stream of status snapshots for observation.
+    ///
+    /// The stream emits whenever a status read or a completed request
+    /// produces a fresh snapshot. It never prompts.
+    public var updates: @Sendable () async -> AsyncStream<MicrophoneStatus>
+
     /// Creates a capability from its operations.
     ///
     /// - Parameters:
     ///   - status: Reads the current status.
     ///   - request: Requests access.
+    ///   - updates: Returns a stream of status snapshots.
     public init(
         status: @escaping @Sendable () async -> MicrophoneStatus,
-        request: @escaping @Sendable () async throws -> MicrophoneStatus
+        request: @escaping @Sendable () async throws -> MicrophoneStatus,
+        updates: @escaping @Sendable () async -> AsyncStream<MicrophoneStatus>
     ) {
         self.status = status
         self.request = request
+        self.updates = updates
     }
 }
