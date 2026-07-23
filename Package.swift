@@ -15,7 +15,10 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "Permissionary"
+            name: "Permissionary",
+            resources: [
+                .copy("PrivacyInfo.xcprivacy")
+            ]
         ),
         .testTarget(
             name: "PermissionaryTests",
