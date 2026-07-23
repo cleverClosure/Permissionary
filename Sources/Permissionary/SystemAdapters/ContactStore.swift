@@ -42,12 +42,17 @@ extension ContactsPermission {
         coordination: RequestCoordination = RequestCoordination()
     ) -> ContactsPermission {
         let coalescer = RequestCoalescer<ContactsStatus>()
+        let hub = StatusHub<ContactsStatus>()
         return ContactsPermission(
-            status: { ContactsStatus(native: shim.authorizationStatus()) },
+            status: {
+                let status = ContactsStatus(native: shim.authorizationStatus())
+                await hub.publish(status)
+                return status
+            },
             request: {
                 try await coalescer.run {
                     try await coordination.serializer.run {
-                        try await PromptOnceRequest.run(
+                        let status = try await PromptOnceRequest.run(
                             usageDescriptionKey: "NSContactsUsageDescription",
                             infoPlist: infoPlist,
                             readNative: shim.authorizationStatus,
@@ -55,11 +60,14 @@ extension ContactsPermission {
                             prompt: shim.requestAccess,
                             makeStatus: { ContactsStatus(native: $0) }
                         )
+                        await hub.publish(status)
+                        return status
                     }
                 } ifCancelled: {
                     ContactsStatus(native: shim.authorizationStatus())
                 }
-            }
+            },
+            updates: { await hub.stream() }
         )
     }
 }

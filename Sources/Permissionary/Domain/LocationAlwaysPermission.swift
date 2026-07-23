@@ -24,16 +24,27 @@ public struct LocationAlwaysPermission: Sendable {
     /// `NSLocationAlwaysAndWhenInUseUsageDescription` is missing.
     public var request: @Sendable () async throws -> LocationAlwaysStatus
 
+    /// Returns a stream of status snapshots for observation.
+    ///
+    /// The stream emits whenever a status read, a completed request, or
+    /// a system authorization change produces a fresh snapshot; a
+    /// provisional Always downgrade arrives here without any
+    /// application action. It never prompts.
+    public var updates: @Sendable () async -> AsyncStream<LocationAlwaysStatus>
+
     /// Creates a capability from its operations.
     ///
     /// - Parameters:
     ///   - status: Reads the current status.
     ///   - request: Requests access.
+    ///   - updates: Returns a stream of status snapshots.
     public init(
         status: @escaping @Sendable () async -> LocationAlwaysStatus,
-        request: @escaping @Sendable () async throws -> LocationAlwaysStatus
+        request: @escaping @Sendable () async throws -> LocationAlwaysStatus,
+        updates: @escaping @Sendable () async -> AsyncStream<LocationAlwaysStatus>
     ) {
         self.status = status
         self.request = request
+        self.updates = updates
     }
 }

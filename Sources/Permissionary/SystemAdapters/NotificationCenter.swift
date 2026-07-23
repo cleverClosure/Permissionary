@@ -136,23 +136,32 @@ extension NotificationsPermission {
         coordination: RequestCoordination = RequestCoordination()
     ) -> NotificationsPermission {
         let coalescer = RequestCoalescer<NotificationsStatus>()
+        let hub = StatusHub<NotificationsStatus>()
         return NotificationsPermission(
             status: {
                 let current = await shim.read()
-                return NotificationsStatus(native: current.status, settings: current.settings)
+                let status = NotificationsStatus(native: current.status, settings: current.settings)
+                await hub.publish(status)
+                return status
             },
             request: { options in
                 try await coalescer.run {
                     await coordination.serializer.run {
                         await shim.requestAuthorization(options.native)
                         let final = await shim.read()
-                        return NotificationsStatus(native: final.status, settings: final.settings)
+                        let status = NotificationsStatus(
+                            native: final.status,
+                            settings: final.settings
+                        )
+                        await hub.publish(status)
+                        return status
                     }
                 } ifCancelled: {
                     let current = await shim.read()
                     return NotificationsStatus(native: current.status, settings: current.settings)
                 }
-            }
+            },
+            updates: { await hub.stream() }
         )
     }
 }

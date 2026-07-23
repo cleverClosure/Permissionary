@@ -20,16 +20,25 @@ public struct ContactsPermission: Sendable {
     /// would be needed but `NSContactsUsageDescription` is missing.
     public var request: @Sendable () async throws -> ContactsStatus
 
+    /// Returns a stream of status snapshots for observation.
+    ///
+    /// The stream emits whenever a status read or a completed request
+    /// produces a fresh snapshot. It never prompts.
+    public var updates: @Sendable () async -> AsyncStream<ContactsStatus>
+
     /// Creates a capability from its operations.
     ///
     /// - Parameters:
     ///   - status: Reads the current status.
     ///   - request: Requests access.
+    ///   - updates: Returns a stream of status snapshots.
     public init(
         status: @escaping @Sendable () async -> ContactsStatus,
-        request: @escaping @Sendable () async throws -> ContactsStatus
+        request: @escaping @Sendable () async throws -> ContactsStatus,
+        updates: @escaping @Sendable () async -> AsyncStream<ContactsStatus>
     ) {
         self.status = status
         self.request = request
+        self.updates = updates
     }
 }

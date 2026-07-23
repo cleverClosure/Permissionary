@@ -236,7 +236,13 @@ Avoid APIs that automatically trigger a system prompt from:
 
 ### Scene refresh
 
-Permission status should be refreshable when the app becomes active:
+The live client re-reads every capability when the application becomes
+active and publishes the results through the domain update streams, so
+observable models refresh automatically without per-view modifiers
+(ADR 0014). This is safe because status reads never prompt.
+
+Injected clients receive no automatic feeding. Tests and previews drive
+state explicitly, and `refresh()` on any model re-reads on demand:
 
 ```swift
 .onChange(of: scenePhase) { _, phase in
@@ -248,7 +254,7 @@ Permission status should be refreshable when the app becomes active:
 }
 ```
 
-The library may provide a convenience modifier for refreshing, but not for automatically requesting.
+No modifier automates requesting; requests always remain explicit.
 
 ## Configuration validation
 

@@ -38,12 +38,17 @@ extension TrackingPermission {
         coordination: RequestCoordination = RequestCoordination()
     ) -> TrackingPermission {
         let coalescer = RequestCoalescer<TrackingStatus>()
+        let hub = StatusHub<TrackingStatus>()
         return TrackingPermission(
-            status: { TrackingStatus(native: shim.authorizationStatus()) },
+            status: {
+                let status = TrackingStatus(native: shim.authorizationStatus())
+                await hub.publish(status)
+                return status
+            },
             request: {
                 try await coalescer.run {
                     try await coordination.serializer.run {
-                        try await PromptOnceRequest.run(
+                        let status = try await PromptOnceRequest.run(
                             usageDescriptionKey: "NSUserTrackingUsageDescription",
                             infoPlist: infoPlist,
                             readNative: shim.authorizationStatus,
@@ -51,11 +56,14 @@ extension TrackingPermission {
                             prompt: shim.requestAuthorization,
                             makeStatus: { TrackingStatus(native: $0) }
                         )
+                        await hub.publish(status)
+                        return status
                     }
                 } ifCancelled: {
                     TrackingStatus(native: shim.authorizationStatus())
                 }
-            }
+            },
+            updates: { await hub.stream() }
         )
     }
 }

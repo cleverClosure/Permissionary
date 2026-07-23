@@ -9,90 +9,6 @@ import Testing
 
 @testable import Permissionary
 
-private enum Fixture {
-    static func client(
-        openSettings: @escaping @Sendable () async -> Void = {}
-    ) -> PermissionsClient {
-        PermissionsClient(
-            camera: CameraPermission(
-                status: { CameraStatus(authorization: .notDetermined, recovery: nil) },
-                request: { CameraStatus(authorization: .notDetermined, recovery: nil) }
-            ),
-            locationWhenInUse: LocationWhenInUsePermission(
-                status: {
-                    LocationWhenInUseStatus(
-                        authorization: .notDetermined,
-                        accuracy: nil,
-                        recovery: nil
-                    )
-                },
-                request: {
-                    LocationWhenInUseStatus(
-                        authorization: .notDetermined,
-                        accuracy: nil,
-                        recovery: nil
-                    )
-                }
-            ),
-            locationAlways: LocationAlwaysPermission(
-                status: {
-                    LocationAlwaysStatus(
-                        authorization: .notDetermined,
-                        accuracy: nil,
-                        recovery: nil
-                    )
-                },
-                request: {
-                    LocationAlwaysStatus(
-                        authorization: .notDetermined,
-                        accuracy: nil,
-                        recovery: nil
-                    )
-                }
-            ),
-            notifications: NotificationsPermission(
-                status: {
-                    NotificationsStatus(
-                        authorization: .notDetermined,
-                        grant: nil,
-                        settings: .allDisabled,
-                        recovery: nil
-                    )
-                },
-                request: { _ in
-                    NotificationsStatus(
-                        authorization: .notDetermined,
-                        grant: nil,
-                        settings: .allDisabled,
-                        recovery: nil
-                    )
-                }
-            ),
-            photosReadWrite: PhotosReadWritePermission(
-                status: { PhotosReadWriteStatus(authorization: .notDetermined, recovery: nil) },
-                request: { PhotosReadWriteStatus(authorization: .notDetermined, recovery: nil) }
-            ),
-            photosAddOnly: PhotosAddOnlyPermission(
-                status: { PhotosAddOnlyStatus(authorization: .notDetermined, recovery: nil) },
-                request: { PhotosAddOnlyStatus(authorization: .notDetermined, recovery: nil) }
-            ),
-            contacts: ContactsPermission(
-                status: { ContactsStatus(authorization: .notDetermined, recovery: nil) },
-                request: { ContactsStatus(authorization: .notDetermined, recovery: nil) }
-            ),
-            microphone: MicrophonePermission(
-                status: { MicrophoneStatus(authorization: .notDetermined, recovery: nil) },
-                request: { MicrophoneStatus(authorization: .notDetermined, recovery: nil) }
-            ),
-            tracking: TrackingPermission(
-                status: { TrackingStatus(authorization: .notDetermined, recovery: nil) },
-                request: { TrackingStatus(authorization: .notDetermined, recovery: nil) }
-            ),
-            openSettings: openSettings
-        )
-    }
-}
-
 struct PermissionsClientTests {
     @Test("The client runs the injected settings operation")
     func runsInjectedOpenSettings() async {
@@ -107,7 +23,8 @@ struct PermissionsClientTests {
         var client = Fixture.client()
         client.camera = CameraPermission(
             status: { CameraStatus(authorization: .authorized, recovery: nil) },
-            request: { CameraStatus(authorization: .authorized, recovery: nil) }
+            request: { CameraStatus(authorization: .authorized, recovery: nil) },
+            updates: { AsyncStream { $0.finish() } }
         )
         let status = await client.camera.status()
         #expect(status.authorization == .authorized)

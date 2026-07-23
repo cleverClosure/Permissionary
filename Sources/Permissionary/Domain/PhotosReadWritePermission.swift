@@ -20,16 +20,25 @@ public struct PhotosReadWritePermission: Sendable {
     /// missing.
     public var request: @Sendable () async throws -> PhotosReadWriteStatus
 
+    /// Returns a stream of status snapshots for observation.
+    ///
+    /// The stream emits whenever a status read or a completed request
+    /// produces a fresh snapshot. It never prompts.
+    public var updates: @Sendable () async -> AsyncStream<PhotosReadWriteStatus>
+
     /// Creates a capability from its operations.
     ///
     /// - Parameters:
     ///   - status: Reads the current status.
     ///   - request: Requests access.
+    ///   - updates: Returns a stream of status snapshots.
     public init(
         status: @escaping @Sendable () async -> PhotosReadWriteStatus,
-        request: @escaping @Sendable () async throws -> PhotosReadWriteStatus
+        request: @escaping @Sendable () async throws -> PhotosReadWriteStatus,
+        updates: @escaping @Sendable () async -> AsyncStream<PhotosReadWriteStatus>
     ) {
         self.status = status
         self.request = request
+        self.updates = updates
     }
 }

@@ -169,22 +169,33 @@ extension LocationWhenInUsePermission {
         coordination: RequestCoordination = RequestCoordination()
     ) -> LocationWhenInUsePermission {
         let coalescer = RequestCoalescer<LocationWhenInUseStatus>()
+        let hub = StatusHub<LocationWhenInUseStatus>()
+        let publishCurrent: @Sendable () async -> LocationWhenInUseStatus = {
+            let status = await LocationWhenInUseStatus(
+                native: shim.authorizationStatus(),
+                nativeAccuracy: shim.accuracyAuthorization()
+            )
+            await hub.publish(status)
+            return status
+        }
+        Task {
+            for await _ in await shim.authorizationChanges() {
+                _ = await publishCurrent()
+            }
+        }
         return LocationWhenInUsePermission(
-            status: {
-                await LocationWhenInUseStatus(
-                    native: shim.authorizationStatus(),
-                    nativeAccuracy: shim.accuracyAuthorization()
-                )
-            },
+            status: publishCurrent,
             request: {
                 try await coalescer.run {
                     try await coordination.serializer.run {
                         let current = await shim.authorizationStatus()
                         guard current == .notDetermined else {
-                            return await LocationWhenInUseStatus(
+                            let status = await LocationWhenInUseStatus(
                                 native: current,
                                 nativeAccuracy: shim.accuracyAuthorization()
                             )
+                            await hub.publish(status)
+                            return status
                         }
                         try LocationRequestFlow.validate(
                             keys: [LocationRequestFlow.whenInUseKey],
@@ -193,10 +204,7 @@ extension LocationWhenInUsePermission {
                         await LocationRequestFlow.fireAndAwaitChange(shim: shim) {
                             await $0.requestWhenInUseAuthorization()
                         }
-                        return await LocationWhenInUseStatus(
-                            native: shim.authorizationStatus(),
-                            nativeAccuracy: shim.accuracyAuthorization()
-                        )
+                        return await publishCurrent()
                     }
                 } ifCancelled: {
                     await LocationWhenInUseStatus(
@@ -204,7 +212,8 @@ extension LocationWhenInUsePermission {
                         nativeAccuracy: shim.accuracyAuthorization()
                     )
                 }
-            }
+            },
+            updates: { await hub.stream() }
         )
     }
 }
@@ -216,13 +225,22 @@ extension LocationAlwaysPermission {
         coordination: RequestCoordination = RequestCoordination()
     ) -> LocationAlwaysPermission {
         let coalescer = RequestCoalescer<LocationAlwaysStatus>()
+        let hub = StatusHub<LocationAlwaysStatus>()
+        let publishCurrent: @Sendable () async -> LocationAlwaysStatus = {
+            let status = await LocationAlwaysStatus(
+                native: shim.authorizationStatus(),
+                nativeAccuracy: shim.accuracyAuthorization()
+            )
+            await hub.publish(status)
+            return status
+        }
+        Task {
+            for await _ in await shim.authorizationChanges() {
+                _ = await publishCurrent()
+            }
+        }
         return LocationAlwaysPermission(
-            status: {
-                await LocationAlwaysStatus(
-                    native: shim.authorizationStatus(),
-                    nativeAccuracy: shim.accuracyAuthorization()
-                )
-            },
+            status: publishCurrent,
             request: {
                 try await coalescer.run {
                     try await coordination.serializer.run {
@@ -239,10 +257,7 @@ extension LocationAlwaysPermission {
                             await LocationRequestFlow.fireAndAwaitChange(shim: shim) {
                                 await $0.requestAlwaysAuthorization()
                             }
-                            return await LocationAlwaysStatus(
-                                native: shim.authorizationStatus(),
-                                nativeAccuracy: shim.accuracyAuthorization()
-                            )
+                            return await publishCurrent()
                         case .authorizedWhenInUse:
                             try LocationRequestFlow.validate(
                                 keys: [
@@ -252,15 +267,14 @@ extension LocationAlwaysPermission {
                                 infoPlist: infoPlist
                             )
                             await shim.requestAlwaysAuthorization()
-                            return await LocationAlwaysStatus(
-                                native: shim.authorizationStatus(),
-                                nativeAccuracy: shim.accuracyAuthorization()
-                            )
+                            return await publishCurrent()
                         default:
-                            return await LocationAlwaysStatus(
+                            let status = await LocationAlwaysStatus(
                                 native: current,
                                 nativeAccuracy: shim.accuracyAuthorization()
                             )
+                            await hub.publish(status)
+                            return status
                         }
                     }
                 } ifCancelled: {
@@ -269,7 +283,8 @@ extension LocationAlwaysPermission {
                         nativeAccuracy: shim.accuracyAuthorization()
                     )
                 }
-            }
+            },
+            updates: { await hub.stream() }
         )
     }
 }
