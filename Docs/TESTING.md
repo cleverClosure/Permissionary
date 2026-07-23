@@ -149,7 +149,7 @@ CI should run:
 - Contract tests
 - Documentation build
 - Demo-app compilation
-- Formatting or linting if adopted
+- Style lint via `swift format` in strict mode
 - Package manifest validation
 - Pinned stable Xcode versions for reproducible builds
 
