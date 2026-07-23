@@ -12,6 +12,8 @@ import SwiftUI
 struct NotificationsScreen: View {
     let model: NotificationsPermissionModel
 
+    @Environment(\.permissions) private var permissions
+
     @State private var alert = true
     @State private var sound = true
     @State private var badge = true
@@ -83,6 +85,11 @@ struct NotificationsScreen: View {
         if model.status?.recovery == .openSettings {
             Section("Recovery") {
                 OpenSettingsButton()
+                Button("Open Notification Settings") {
+                    Task {
+                        await permissions.openNotificationSettings()
+                    }
+                }
             }
         }
     }

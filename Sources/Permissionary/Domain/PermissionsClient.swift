@@ -47,6 +47,14 @@ public struct PermissionsClient: Sendable {
     /// never opens Settings automatically.
     public var openSettings: @Sendable () async -> Void
 
+    /// Opens the application's notification settings in the Settings app.
+    ///
+    /// Uses the sanctioned notification-settings destination, which lands
+    /// deeper than ``openSettings`` when notification recovery benefits
+    /// from it. Call this only from an explicit user action; the library
+    /// never opens Settings automatically.
+    public var openNotificationSettings: @Sendable () async -> Void
+
     /// Creates a client from its operations.
     ///
     /// - Parameters:
@@ -60,6 +68,8 @@ public struct PermissionsClient: Sendable {
     ///   - microphone: The microphone capability.
     ///   - tracking: The app-tracking-transparency capability.
     ///   - openSettings: Opens the application's page in Settings.
+    ///   - openNotificationSettings: Opens the application's notification
+    ///     settings in Settings.
     public init(
         camera: CameraPermission,
         locationWhenInUse: LocationWhenInUsePermission,
@@ -70,7 +80,8 @@ public struct PermissionsClient: Sendable {
         contacts: ContactsPermission,
         microphone: MicrophonePermission,
         tracking: TrackingPermission,
-        openSettings: @escaping @Sendable () async -> Void
+        openSettings: @escaping @Sendable () async -> Void,
+        openNotificationSettings: @escaping @Sendable () async -> Void
     ) {
         self.camera = camera
         self.locationWhenInUse = locationWhenInUse
@@ -82,5 +93,6 @@ public struct PermissionsClient: Sendable {
         self.microphone = microphone
         self.tracking = tracking
         self.openSettings = openSettings
+        self.openNotificationSettings = openNotificationSettings
     }
 }

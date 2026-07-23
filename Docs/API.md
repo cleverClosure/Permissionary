@@ -141,9 +141,9 @@ if result.recovery == .openSettings {
 
 `.restricted` must not automatically imply that Settings can fix the problem.
 
-Notification recovery may deep-link to the application's notification settings through the sanctioned system URL where available. Private URL schemes are never used.
+Notification recovery deep-links to the application's notification settings through the client's `openNotificationSettings`, which uses the sanctioned system URL. Private URL schemes are never used.
 
-Executing `manageLimitedSelection` is capability-specific: the photo library picker requires UIKit presentation bridging, while contact selection management has native SwiftUI support. The SwiftUI layer owns these entry points (ADR 0009).
+Executing `manageLimitedSelection` is capability-specific: the photo library picker requires UIKit presentation bridging, owned by the SwiftUI layer through the `limitedPhotoLibraryPicker(isPresented:)` modifier, while contact selection management uses the system's native SwiftUI entry point (ADR 0009).
 
 ## Permission client
 
@@ -163,6 +163,7 @@ public struct PermissionsClient: Sendable {
     public var microphone: MicrophonePermission
     public var tracking: TrackingPermission
     public var openSettings: @Sendable () async -> Void
+    public var openNotificationSettings: @Sendable () async -> Void
 }
 ```
 
