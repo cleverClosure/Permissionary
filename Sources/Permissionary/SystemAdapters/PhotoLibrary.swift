@@ -67,7 +67,7 @@ extension PhotosReadWritePermission {
                 try await coalescer.run {
                     try await coordination.serializer.run {
                         let status = try await PromptOnceRequest.run(
-                            usageDescriptionKey: "NSPhotoLibraryUsageDescription",
+                            usageDescriptionKey: UsageDescriptionKey.photoLibrary,
                             infoPlist: infoPlist,
                             readNative: shim.authorizationStatus,
                             canPrompt: { $0 == .notDetermined },
@@ -104,7 +104,7 @@ extension PhotosAddOnlyPermission {
                 try await coalescer.run {
                     try await coordination.serializer.run {
                         let status = try await PromptOnceRequest.run(
-                            usageDescriptionKey: "NSPhotoLibraryAddUsageDescription",
+                            usageDescriptionKey: UsageDescriptionKey.photoLibraryAdd,
                             infoPlist: infoPlist,
                             readNative: shim.authorizationStatus,
                             canPrompt: { $0 == .notDetermined },

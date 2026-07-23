@@ -75,6 +75,9 @@ struct CapabilityListView: View {
                 NavigationLink("Coordination") {
                     CoordinationLabScreen()
                 }
+                NavigationLink("Diagnostics") {
+                    DiagnosticsScreen()
+                }
             }
         }
     }

@@ -270,7 +270,13 @@ Examples:
 
 Configuration failures should be descriptive and actionable.
 
-A standalone diagnostic entry point may be provided so applications can surface configuration problems in debug builds before any request is made.
+The standalone diagnostic entry point reports, for every supported capability, the error its request would throw:
+
+```swift
+let issues = PermissionsDiagnostics.configurationIssues()
+```
+
+Applications surface these in debug builds before any request is made. `UsageDescriptionKey` provides the required key constants for filtering or display.
 
 ## Naming rules
 

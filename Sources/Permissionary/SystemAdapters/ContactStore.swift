@@ -53,7 +53,7 @@ extension ContactsPermission {
                 try await coalescer.run {
                     try await coordination.serializer.run {
                         let status = try await PromptOnceRequest.run(
-                            usageDescriptionKey: "NSContactsUsageDescription",
+                            usageDescriptionKey: UsageDescriptionKey.contacts,
                             infoPlist: infoPlist,
                             readNative: shim.authorizationStatus,
                             canPrompt: { $0 == .notDetermined },

@@ -21,6 +21,9 @@ releases may contain breaking changes; pin an exact version.
   photo selection.
 - Configuration validation: requests throw a descriptive `PermissionError` for missing
   usage-description keys instead of letting the system terminate the process.
+- Configuration diagnostics: `PermissionsDiagnostics.configurationIssues()` returns the
+  error each request would throw for a missing or empty usage description, and
+  `UsageDescriptionKey` publishes the required key constants.
 - Request coordination: duplicate requests per capability coalesce into one native prompt
   with a shared result; prompts across capabilities are serialized.
 - SwiftUI layer: `\.permissions` environment entry defaulting to the live client and an

@@ -58,7 +58,17 @@ application's page and its notification settings in the Settings app.
 ## Usage-description keys
 
 Requests validate configuration first and throw a descriptive `PermissionError` instead of
-letting the system terminate the process.
+letting the system terminate the process. `UsageDescriptionKey` provides the keys as
+constants, and a debug-build check surfaces every problem at once — each issue is exactly
+the error the corresponding request would throw:
+
+```swift
+func auditPermissionConfiguration() {
+    for issue in PermissionsDiagnostics.configurationIssues() {
+        print(issue)
+    }
+}
+```
 
 | Capability | Required Info.plist key |
 |---|---|

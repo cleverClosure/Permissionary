@@ -121,10 +121,8 @@ struct CapabilityScreen<Status: PermissionStatus, Details: View>: View {
     }
 
     private func usageKeyIsPresent(_ key: String) -> Bool {
-        guard let value = Bundle.main.object(forInfoDictionaryKey: key) as? String else {
-            return false
-        }
-        return !value.isEmpty
+        !PermissionsDiagnostics.configurationIssues()
+            .contains(.missingUsageDescription(key: key))
     }
 }
 

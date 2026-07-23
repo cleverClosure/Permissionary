@@ -12,6 +12,12 @@ import SwiftUI
 // The release gate requires README examples to compile; when the public API
 // drifts from the documentation, this file breaks the build. Nothing here runs.
 
+func auditPermissionConfiguration() {
+    for issue in PermissionsDiagnostics.configurationIssues() {
+        print(issue)
+    }
+}
+
 func enableCamera(permissions: PermissionsClient) async throws {
     let status = await permissions.camera.status()
     guard status.authorization == .notDetermined else {
