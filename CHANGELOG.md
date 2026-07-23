@@ -15,8 +15,10 @@ releases may contain breaking changes; pin an exact version.
   `status()`, `request()`, and an `updates()` stream with a typed status.
 - Normalized `PermissionAuthorization` plus per-capability detail: location accuracy,
   notification grant, and a Sendable notification-settings snapshot.
-- Explicit recovery model: statuses suggest `openSettings` or `manageLimitedSelection`; the
-  client's `openSettings` operation opens the application's Settings page.
+- Explicit recovery model: statuses suggest `openSettings` or `manageLimitedSelection`;
+  execution ships with the client's `openSettings` and `openNotificationSettings` operations
+  and the `limitedPhotoLibraryPicker(isPresented:)` SwiftUI modifier for managing the limited
+  photo selection.
 - Configuration validation: requests throw a descriptive `PermissionError` for missing
   usage-description keys instead of letting the system terminate the process.
 - Request coordination: duplicate requests per capability coalesce into one native prompt

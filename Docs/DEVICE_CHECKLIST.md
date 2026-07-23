@@ -105,6 +105,7 @@ candidate needs a pass on the current iOS release and the minimum supported rele
       notifications deliver quietly.
 - [ ] Toggle individual channels in Settings and return: snapshot reflects the change without
       relaunch; the app is not terminated.
+- [ ] Open Notification Settings lands directly on the app's notification settings page.
 
 ## Tracking
 

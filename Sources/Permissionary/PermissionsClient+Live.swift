@@ -34,7 +34,8 @@ extension PermissionsClient {
             contacts: .adapter(shim: .live, infoPlist: .live, coordination: coordination),
             microphone: .adapter(shim: .live, infoPlist: .live, coordination: coordination),
             tracking: .adapter(shim: .live, infoPlist: .live, coordination: coordination),
-            openSettings: { await PermissionsClient.openSystemSettings() }
+            openSettings: { await PermissionsClient.openSystemSettings() },
+            openNotificationSettings: { await PermissionsClient.openSystemNotificationSettings() }
         )
         Task { @MainActor in
             let activations = NotificationCenter.default.notifications(
@@ -50,6 +51,14 @@ extension PermissionsClient {
     @MainActor
     private static func openSystemSettings() async {
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        _ = await UIApplication.shared.open(url)
+    }
+
+    @MainActor
+    private static func openSystemNotificationSettings() async {
+        guard let url = URL(string: UIApplication.openNotificationSettingsURLString) else {
+            return
+        }
         _ = await UIApplication.shared.open(url)
     }
 

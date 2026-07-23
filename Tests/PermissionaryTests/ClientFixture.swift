@@ -11,7 +11,8 @@ import Foundation
 
 enum Fixture {
     static func client(
-        openSettings: @escaping @Sendable () async -> Void = {}
+        openSettings: @escaping @Sendable () async -> Void = {},
+        openNotificationSettings: @escaping @Sendable () async -> Void = {}
     ) -> PermissionsClient {
         PermissionsClient(
             camera: CameraPermission(
@@ -97,7 +98,8 @@ enum Fixture {
                 request: { TrackingStatus(authorization: .notDetermined, recovery: nil) },
                 updates: { AsyncStream { $0.finish() } }
             ),
-            openSettings: openSettings
+            openSettings: openSettings,
+            openNotificationSettings: openNotificationSettings
         )
     }
 }

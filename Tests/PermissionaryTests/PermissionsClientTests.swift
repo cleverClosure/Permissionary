@@ -18,6 +18,14 @@ struct PermissionsClientTests {
         }
     }
 
+    @Test("The client runs the injected notification-settings operation")
+    func runsInjectedOpenNotificationSettings() async {
+        await confirmation("openNotificationSettings runs") { opened in
+            let client = Fixture.client(openNotificationSettings: { opened() })
+            await client.openNotificationSettings()
+        }
+    }
+
     @Test("Capability operations are the injected ones")
     func capabilityInjection() async {
         var client = Fixture.client()

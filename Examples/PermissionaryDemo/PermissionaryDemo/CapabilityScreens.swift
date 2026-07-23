@@ -43,6 +43,8 @@ struct MicrophoneScreen: View {
 struct PhotosReadWriteScreen: View {
     let model: PhotosReadWritePermissionModel
 
+    @State private var isManagingSelection = false
+
     var body: some View {
         CapabilityScreen(
             title: "Photos Read/Write",
@@ -51,8 +53,9 @@ struct PhotosReadWriteScreen: View {
             note: "Limited access is a successful state with its own recovery action.",
             request: { try await model.request() },
             refresh: { await model.refresh() },
-            manageLimitedSelection: { LimitedLibraryPicker.present() }
+            manageLimitedSelection: { isManagingSelection = true }
         )
+        .limitedPhotoLibraryPicker(isPresented: $isManagingSelection)
     }
 }
 

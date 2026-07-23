@@ -52,7 +52,8 @@ Until 1.0, minor releases may contain breaking changes, so pin an exact version.
 | Notifications | `notifications` | `NotificationsStatus` |
 | Tracking | `tracking` | `TrackingStatus` |
 
-The client also exposes `openSettings`, which opens the application's page in the Settings app.
+The client also exposes `openSettings` and `openNotificationSettings`, which open the
+application's page and its notification settings in the Settings app.
 
 ## Usage-description keys
 
@@ -122,6 +123,10 @@ previews and tests inject fakes. Each model reads the initial status, follows th
 update stream, and exposes explicit `refresh()` and `request()` operations. The live client
 re-reads every capability when the application becomes active, so models reflect Settings
 changes without any per-view code. Requests are never triggered by view lifecycle.
+
+When photo access is limited, present the system selection manager with the
+`limitedPhotoLibraryPicker(isPresented:)` modifier; contacts use the system's native
+`contactAccessPicker`.
 
 ## Observing changes
 
