@@ -18,6 +18,38 @@ private enum Fixture {
                 status: { CameraStatus(authorization: .notDetermined, recovery: nil) },
                 request: { CameraStatus(authorization: .notDetermined, recovery: nil) }
             ),
+            locationWhenInUse: LocationWhenInUsePermission(
+                status: {
+                    LocationWhenInUseStatus(
+                        authorization: .notDetermined,
+                        accuracy: nil,
+                        recovery: nil
+                    )
+                },
+                request: {
+                    LocationWhenInUseStatus(
+                        authorization: .notDetermined,
+                        accuracy: nil,
+                        recovery: nil
+                    )
+                }
+            ),
+            locationAlways: LocationAlwaysPermission(
+                status: {
+                    LocationAlwaysStatus(
+                        authorization: .notDetermined,
+                        accuracy: nil,
+                        recovery: nil
+                    )
+                },
+                request: {
+                    LocationAlwaysStatus(
+                        authorization: .notDetermined,
+                        accuracy: nil,
+                        recovery: nil
+                    )
+                }
+            ),
             photosReadWrite: PhotosReadWritePermission(
                 status: { PhotosReadWriteStatus(authorization: .notDetermined, recovery: nil) },
                 request: { PhotosReadWriteStatus(authorization: .notDetermined, recovery: nil) }

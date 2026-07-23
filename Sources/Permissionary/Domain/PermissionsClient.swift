@@ -16,6 +16,12 @@ public struct PermissionsClient: Sendable {
     /// The camera capability.
     public var camera: CameraPermission
 
+    /// The when-in-use location capability.
+    public var locationWhenInUse: LocationWhenInUsePermission
+
+    /// The always location capability.
+    public var locationAlways: LocationAlwaysPermission
+
     /// The photo library read/write capability.
     public var photosReadWrite: PhotosReadWritePermission
 
@@ -42,6 +48,8 @@ public struct PermissionsClient: Sendable {
     ///
     /// - Parameters:
     ///   - camera: The camera capability.
+    ///   - locationWhenInUse: The when-in-use location capability.
+    ///   - locationAlways: The always location capability.
     ///   - photosReadWrite: The photo library read/write capability.
     ///   - photosAddOnly: The photo library add-only capability.
     ///   - contacts: The contacts capability.
@@ -50,6 +58,8 @@ public struct PermissionsClient: Sendable {
     ///   - openSettings: Opens the application's page in Settings.
     public init(
         camera: CameraPermission,
+        locationWhenInUse: LocationWhenInUsePermission,
+        locationAlways: LocationAlwaysPermission,
         photosReadWrite: PhotosReadWritePermission,
         photosAddOnly: PhotosAddOnlyPermission,
         contacts: ContactsPermission,
@@ -58,6 +68,8 @@ public struct PermissionsClient: Sendable {
         openSettings: @escaping @Sendable () async -> Void
     ) {
         self.camera = camera
+        self.locationWhenInUse = locationWhenInUse
+        self.locationAlways = locationAlways
         self.photosReadWrite = photosReadWrite
         self.photosAddOnly = photosAddOnly
         self.contacts = contacts
