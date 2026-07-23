@@ -1,0 +1,247 @@
+//
+//  Location.swift
+//  Permissionary
+//
+//  Created by Tim Isaev
+//
+
+import CoreLocation
+
+struct LocationShim: Sendable {
+    var authorizationStatus: @Sendable () async -> CLAuthorizationStatus
+    var accuracyAuthorization: @Sendable () async -> CLAccuracyAuthorization
+    var requestWhenInUseAuthorization: @Sendable () async -> Void
+    var requestAlwaysAuthorization: @Sendable () async -> Void
+    var authorizationChanges: @Sendable () async -> AsyncStream<Void>
+
+    static let live = LocationShim(
+        authorizationStatus: { await LocationManagerBox.shared.currentStatus() },
+        accuracyAuthorization: { await LocationManagerBox.shared.currentAccuracy() },
+        requestWhenInUseAuthorization: { await LocationManagerBox.shared.requestWhenInUse() },
+        requestAlwaysAuthorization: { await LocationManagerBox.shared.requestAlways() },
+        authorizationChanges: { await LocationManagerBox.shared.changes() }
+    )
+}
+
+@MainActor
+final class LocationManagerBox: NSObject, CLLocationManagerDelegate {
+    static let shared = LocationManagerBox()
+
+    private let manager: CLLocationManager
+    private var subscribers: [UUID: AsyncStream<Void>.Continuation] = [:]
+
+    override init() {
+        manager = CLLocationManager()
+        super.init()
+        manager.delegate = self
+    }
+
+    func currentStatus() -> CLAuthorizationStatus {
+        manager.authorizationStatus
+    }
+
+    func currentAccuracy() -> CLAccuracyAuthorization {
+        manager.accuracyAuthorization
+    }
+
+    func requestWhenInUse() {
+        manager.requestWhenInUseAuthorization()
+    }
+
+    func requestAlways() {
+        manager.requestAlwaysAuthorization()
+    }
+
+    func changes() -> AsyncStream<Void> {
+        let id = UUID()
+        return AsyncStream { continuation in
+            subscribers[id] = continuation
+            continuation.onTermination = { _ in
+                Task { @MainActor in
+                    self.subscribers[id] = nil
+                }
+            }
+        }
+    }
+
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        Task { @MainActor in
+            for continuation in self.subscribers.values {
+                continuation.yield()
+            }
+        }
+    }
+}
+
+extension LocationAccuracy {
+    init(native: CLAccuracyAuthorization) {
+        switch native {
+        case .fullAccuracy: self = .full
+        case .reducedAccuracy: self = .reduced
+        @unknown default:
+            debugLogUnknownNativeState(rawValue: native.rawValue, capability: "locationAccuracy")
+            self = .reduced
+        }
+    }
+}
+
+extension LocationWhenInUseStatus {
+    init(native: CLAuthorizationStatus, nativeAccuracy: CLAccuracyAuthorization) {
+        switch native {
+        case .notDetermined:
+            self.init(authorization: .notDetermined, accuracy: nil, recovery: nil)
+        case .authorizedWhenInUse, .authorizedAlways:
+            self.init(
+                authorization: .authorized,
+                accuracy: LocationAccuracy(native: nativeAccuracy),
+                recovery: nil
+            )
+        case .denied:
+            self.init(authorization: .denied, accuracy: nil, recovery: .openSettings)
+        case .restricted:
+            self.init(authorization: .restricted, accuracy: nil, recovery: nil)
+        @unknown default:
+            debugLogUnknownNativeState(
+                rawValue: Int(native.rawValue),
+                capability: "locationWhenInUse"
+            )
+            self.init(authorization: .denied, accuracy: nil, recovery: .openSettings)
+        }
+    }
+}
+
+extension LocationAlwaysStatus {
+    init(native: CLAuthorizationStatus, nativeAccuracy: CLAccuracyAuthorization) {
+        switch native {
+        case .notDetermined:
+            self.init(authorization: .notDetermined, accuracy: nil, recovery: nil)
+        case .authorizedWhenInUse:
+            self.init(
+                authorization: .limited,
+                accuracy: LocationAccuracy(native: nativeAccuracy),
+                recovery: nil
+            )
+        case .authorizedAlways:
+            self.init(
+                authorization: .authorized,
+                accuracy: LocationAccuracy(native: nativeAccuracy),
+                recovery: nil
+            )
+        case .denied:
+            self.init(authorization: .denied, accuracy: nil, recovery: .openSettings)
+        case .restricted:
+            self.init(authorization: .restricted, accuracy: nil, recovery: nil)
+        @unknown default:
+            debugLogUnknownNativeState(rawValue: Int(native.rawValue), capability: "locationAlways")
+            self.init(authorization: .denied, accuracy: nil, recovery: .openSettings)
+        }
+    }
+}
+
+enum LocationRequestFlow {
+    static let whenInUseKey = "NSLocationWhenInUseUsageDescription"
+    static let alwaysKey = "NSLocationAlwaysAndWhenInUseUsageDescription"
+
+    static func validate(keys: [String], infoPlist: InfoPlistReader) throws {
+        for key in keys {
+            guard let description = infoPlist.string(key), !description.isEmpty else {
+                throw PermissionError.missingUsageDescription(key: key)
+            }
+        }
+    }
+
+    static func fireAndAwaitChange(
+        shim: LocationShim,
+        fire: @Sendable (LocationShim) async -> Void
+    ) async {
+        let changes = await shim.authorizationChanges()
+        await fire(shim)
+        for await _ in changes {
+            break
+        }
+    }
+}
+
+extension LocationWhenInUsePermission {
+    static func adapter(
+        shim: LocationShim,
+        infoPlist: InfoPlistReader
+    ) -> LocationWhenInUsePermission {
+        LocationWhenInUsePermission(
+            status: {
+                await LocationWhenInUseStatus(
+                    native: shim.authorizationStatus(),
+                    nativeAccuracy: shim.accuracyAuthorization()
+                )
+            },
+            request: {
+                let current = await shim.authorizationStatus()
+                guard current == .notDetermined else {
+                    return await LocationWhenInUseStatus(
+                        native: current,
+                        nativeAccuracy: shim.accuracyAuthorization()
+                    )
+                }
+                try LocationRequestFlow.validate(
+                    keys: [LocationRequestFlow.whenInUseKey],
+                    infoPlist: infoPlist
+                )
+                await LocationRequestFlow.fireAndAwaitChange(shim: shim) {
+                    await $0.requestWhenInUseAuthorization()
+                }
+                return await LocationWhenInUseStatus(
+                    native: shim.authorizationStatus(),
+                    nativeAccuracy: shim.accuracyAuthorization()
+                )
+            }
+        )
+    }
+}
+
+extension LocationAlwaysPermission {
+    static func adapter(
+        shim: LocationShim,
+        infoPlist: InfoPlistReader
+    ) -> LocationAlwaysPermission {
+        LocationAlwaysPermission(
+            status: {
+                await LocationAlwaysStatus(
+                    native: shim.authorizationStatus(),
+                    nativeAccuracy: shim.accuracyAuthorization()
+                )
+            },
+            request: {
+                let current = await shim.authorizationStatus()
+                switch current {
+                case .notDetermined:
+                    try LocationRequestFlow.validate(
+                        keys: [LocationRequestFlow.whenInUseKey, LocationRequestFlow.alwaysKey],
+                        infoPlist: infoPlist
+                    )
+                    await LocationRequestFlow.fireAndAwaitChange(shim: shim) {
+                        await $0.requestAlwaysAuthorization()
+                    }
+                    return await LocationAlwaysStatus(
+                        native: shim.authorizationStatus(),
+                        nativeAccuracy: shim.accuracyAuthorization()
+                    )
+                case .authorizedWhenInUse:
+                    try LocationRequestFlow.validate(
+                        keys: [LocationRequestFlow.whenInUseKey, LocationRequestFlow.alwaysKey],
+                        infoPlist: infoPlist
+                    )
+                    await shim.requestAlwaysAuthorization()
+                    return await LocationAlwaysStatus(
+                        native: shim.authorizationStatus(),
+                        nativeAccuracy: shim.accuracyAuthorization()
+                    )
+                default:
+                    return await LocationAlwaysStatus(
+                        native: current,
+                        nativeAccuracy: shim.accuracyAuthorization()
+                    )
+                }
+            }
+        )
+    }
+}
