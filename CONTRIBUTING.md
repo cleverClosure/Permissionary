@@ -39,6 +39,24 @@ The process is intentionally small:
 There are no long-lived branches. Releases are semantic-version tags on
 `main`; before 1.0, minor versions may contain breaking changes.
 
+Merging requires green checks. While the repository is private on a plan
+without server-side branch protection, this is enforced by tooling and
+convention:
+
+- From the terminal, merge with `Scripts/merge.sh <pr-number>`, which
+  waits for every check to pass and then squash-merges
+- From the web UI, merge only when all checks are green
+- Checks can take a few minutes to appear after a pull request opens; an
+  absent check is not a passing check
+
+When the repository becomes public, apply the stored ruleset to require
+the CI check server-side and block direct pushes to `main`:
+
+```sh
+gh api -X POST repos/cleverClosure/Permissionary/rulesets \
+  --input .github/ruleset-main.json
+```
+
 Commit messages use the imperative mood ("Add camera adapter") with a body
 when the change needs explanation.
 
