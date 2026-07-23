@@ -12,6 +12,7 @@ Permissionary is in a pre-development design phase. The most valuable contributi
 - Public API changes require an architecture decision record in [Docs/Decisions](Docs/Decisions)
 - Swift 6 language mode with strict concurrency; no `@unchecked Sendable`
 - No external runtime dependencies
+- Code style is enforced by the toolchain's `swift format` using the repository's `.swift-format` configuration; run `swift format --in-place --recursive Sources Tests Package.swift` before pushing
 - Denial and restriction are values, not errors
 - Reading status must never trigger a system prompt
 - The library never opens Settings or requests permission automatically
