@@ -32,18 +32,29 @@ extension CameraStatus {
 }
 
 extension CameraPermission {
-    static func adapter(shim: CameraShim, infoPlist: InfoPlistReader) -> CameraPermission {
-        CameraPermission(
+    static func adapter(
+        shim: CameraShim,
+        infoPlist: InfoPlistReader,
+        coordination: RequestCoordination = RequestCoordination()
+    ) -> CameraPermission {
+        let coalescer = RequestCoalescer<CameraStatus>()
+        return CameraPermission(
             status: { CameraStatus(native: shim.authorizationStatus()) },
             request: {
-                try await PromptOnceRequest.run(
-                    usageDescriptionKey: "NSCameraUsageDescription",
-                    infoPlist: infoPlist,
-                    readNative: shim.authorizationStatus,
-                    canPrompt: { $0 == .notDetermined },
-                    prompt: { _ = await shim.requestAccess() },
-                    makeStatus: { CameraStatus(native: $0) }
-                )
+                try await coalescer.run {
+                    try await coordination.serializer.run {
+                        try await PromptOnceRequest.run(
+                            usageDescriptionKey: "NSCameraUsageDescription",
+                            infoPlist: infoPlist,
+                            readNative: shim.authorizationStatus,
+                            canPrompt: { $0 == .notDetermined },
+                            prompt: { _ = await shim.requestAccess() },
+                            makeStatus: { CameraStatus(native: $0) }
+                        )
+                    }
+                } ifCancelled: {
+                    CameraStatus(native: shim.authorizationStatus())
+                }
             }
         )
     }

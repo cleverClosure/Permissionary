@@ -165,9 +165,11 @@ enum LocationRequestFlow {
 extension LocationWhenInUsePermission {
     static func adapter(
         shim: LocationShim,
-        infoPlist: InfoPlistReader
+        infoPlist: InfoPlistReader,
+        coordination: RequestCoordination = RequestCoordination()
     ) -> LocationWhenInUsePermission {
-        LocationWhenInUsePermission(
+        let coalescer = RequestCoalescer<LocationWhenInUseStatus>()
+        return LocationWhenInUsePermission(
             status: {
                 await LocationWhenInUseStatus(
                     native: shim.authorizationStatus(),
@@ -175,24 +177,33 @@ extension LocationWhenInUsePermission {
                 )
             },
             request: {
-                let current = await shim.authorizationStatus()
-                guard current == .notDetermined else {
-                    return await LocationWhenInUseStatus(
-                        native: current,
+                try await coalescer.run {
+                    try await coordination.serializer.run {
+                        let current = await shim.authorizationStatus()
+                        guard current == .notDetermined else {
+                            return await LocationWhenInUseStatus(
+                                native: current,
+                                nativeAccuracy: shim.accuracyAuthorization()
+                            )
+                        }
+                        try LocationRequestFlow.validate(
+                            keys: [LocationRequestFlow.whenInUseKey],
+                            infoPlist: infoPlist
+                        )
+                        await LocationRequestFlow.fireAndAwaitChange(shim: shim) {
+                            await $0.requestWhenInUseAuthorization()
+                        }
+                        return await LocationWhenInUseStatus(
+                            native: shim.authorizationStatus(),
+                            nativeAccuracy: shim.accuracyAuthorization()
+                        )
+                    }
+                } ifCancelled: {
+                    await LocationWhenInUseStatus(
+                        native: shim.authorizationStatus(),
                         nativeAccuracy: shim.accuracyAuthorization()
                     )
                 }
-                try LocationRequestFlow.validate(
-                    keys: [LocationRequestFlow.whenInUseKey],
-                    infoPlist: infoPlist
-                )
-                await LocationRequestFlow.fireAndAwaitChange(shim: shim) {
-                    await $0.requestWhenInUseAuthorization()
-                }
-                return await LocationWhenInUseStatus(
-                    native: shim.authorizationStatus(),
-                    nativeAccuracy: shim.accuracyAuthorization()
-                )
             }
         )
     }
@@ -201,9 +212,11 @@ extension LocationWhenInUsePermission {
 extension LocationAlwaysPermission {
     static func adapter(
         shim: LocationShim,
-        infoPlist: InfoPlistReader
+        infoPlist: InfoPlistReader,
+        coordination: RequestCoordination = RequestCoordination()
     ) -> LocationAlwaysPermission {
-        LocationAlwaysPermission(
+        let coalescer = RequestCoalescer<LocationAlwaysStatus>()
+        return LocationAlwaysPermission(
             status: {
                 await LocationAlwaysStatus(
                     native: shim.authorizationStatus(),
@@ -211,33 +224,48 @@ extension LocationAlwaysPermission {
                 )
             },
             request: {
-                let current = await shim.authorizationStatus()
-                switch current {
-                case .notDetermined:
-                    try LocationRequestFlow.validate(
-                        keys: [LocationRequestFlow.whenInUseKey, LocationRequestFlow.alwaysKey],
-                        infoPlist: infoPlist
-                    )
-                    await LocationRequestFlow.fireAndAwaitChange(shim: shim) {
-                        await $0.requestAlwaysAuthorization()
+                try await coalescer.run {
+                    try await coordination.serializer.run {
+                        let current = await shim.authorizationStatus()
+                        switch current {
+                        case .notDetermined:
+                            try LocationRequestFlow.validate(
+                                keys: [
+                                    LocationRequestFlow.whenInUseKey,
+                                    LocationRequestFlow.alwaysKey,
+                                ],
+                                infoPlist: infoPlist
+                            )
+                            await LocationRequestFlow.fireAndAwaitChange(shim: shim) {
+                                await $0.requestAlwaysAuthorization()
+                            }
+                            return await LocationAlwaysStatus(
+                                native: shim.authorizationStatus(),
+                                nativeAccuracy: shim.accuracyAuthorization()
+                            )
+                        case .authorizedWhenInUse:
+                            try LocationRequestFlow.validate(
+                                keys: [
+                                    LocationRequestFlow.whenInUseKey,
+                                    LocationRequestFlow.alwaysKey,
+                                ],
+                                infoPlist: infoPlist
+                            )
+                            await shim.requestAlwaysAuthorization()
+                            return await LocationAlwaysStatus(
+                                native: shim.authorizationStatus(),
+                                nativeAccuracy: shim.accuracyAuthorization()
+                            )
+                        default:
+                            return await LocationAlwaysStatus(
+                                native: current,
+                                nativeAccuracy: shim.accuracyAuthorization()
+                            )
+                        }
                     }
-                    return await LocationAlwaysStatus(
+                } ifCancelled: {
+                    await LocationAlwaysStatus(
                         native: shim.authorizationStatus(),
-                        nativeAccuracy: shim.accuracyAuthorization()
-                    )
-                case .authorizedWhenInUse:
-                    try LocationRequestFlow.validate(
-                        keys: [LocationRequestFlow.whenInUseKey, LocationRequestFlow.alwaysKey],
-                        infoPlist: infoPlist
-                    )
-                    await shim.requestAlwaysAuthorization()
-                    return await LocationAlwaysStatus(
-                        native: shim.authorizationStatus(),
-                        nativeAccuracy: shim.accuracyAuthorization()
-                    )
-                default:
-                    return await LocationAlwaysStatus(
-                        native: current,
                         nativeAccuracy: shim.accuracyAuthorization()
                     )
                 }

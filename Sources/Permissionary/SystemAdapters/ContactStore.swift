@@ -36,18 +36,29 @@ extension ContactsStatus {
 }
 
 extension ContactsPermission {
-    static func adapter(shim: ContactStoreShim, infoPlist: InfoPlistReader) -> ContactsPermission {
-        ContactsPermission(
+    static func adapter(
+        shim: ContactStoreShim,
+        infoPlist: InfoPlistReader,
+        coordination: RequestCoordination = RequestCoordination()
+    ) -> ContactsPermission {
+        let coalescer = RequestCoalescer<ContactsStatus>()
+        return ContactsPermission(
             status: { ContactsStatus(native: shim.authorizationStatus()) },
             request: {
-                try await PromptOnceRequest.run(
-                    usageDescriptionKey: "NSContactsUsageDescription",
-                    infoPlist: infoPlist,
-                    readNative: shim.authorizationStatus,
-                    canPrompt: { $0 == .notDetermined },
-                    prompt: shim.requestAccess,
-                    makeStatus: { ContactsStatus(native: $0) }
-                )
+                try await coalescer.run {
+                    try await coordination.serializer.run {
+                        try await PromptOnceRequest.run(
+                            usageDescriptionKey: "NSContactsUsageDescription",
+                            infoPlist: infoPlist,
+                            readNative: shim.authorizationStatus,
+                            canPrompt: { $0 == .notDetermined },
+                            prompt: shim.requestAccess,
+                            makeStatus: { ContactsStatus(native: $0) }
+                        )
+                    }
+                } ifCancelled: {
+                    ContactsStatus(native: shim.authorizationStatus())
+                }
             }
         )
     }

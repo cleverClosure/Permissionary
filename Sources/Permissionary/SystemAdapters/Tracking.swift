@@ -32,18 +32,29 @@ extension TrackingStatus {
 }
 
 extension TrackingPermission {
-    static func adapter(shim: TrackingShim, infoPlist: InfoPlistReader) -> TrackingPermission {
-        TrackingPermission(
+    static func adapter(
+        shim: TrackingShim,
+        infoPlist: InfoPlistReader,
+        coordination: RequestCoordination = RequestCoordination()
+    ) -> TrackingPermission {
+        let coalescer = RequestCoalescer<TrackingStatus>()
+        return TrackingPermission(
             status: { TrackingStatus(native: shim.authorizationStatus()) },
             request: {
-                try await PromptOnceRequest.run(
-                    usageDescriptionKey: "NSUserTrackingUsageDescription",
-                    infoPlist: infoPlist,
-                    readNative: shim.authorizationStatus,
-                    canPrompt: { $0 == .notDetermined },
-                    prompt: shim.requestAuthorization,
-                    makeStatus: { TrackingStatus(native: $0) }
-                )
+                try await coalescer.run {
+                    try await coordination.serializer.run {
+                        try await PromptOnceRequest.run(
+                            usageDescriptionKey: "NSUserTrackingUsageDescription",
+                            infoPlist: infoPlist,
+                            readNative: shim.authorizationStatus,
+                            canPrompt: { $0 == .notDetermined },
+                            prompt: shim.requestAuthorization,
+                            makeStatus: { TrackingStatus(native: $0) }
+                        )
+                    }
+                } ifCancelled: {
+                    TrackingStatus(native: shim.authorizationStatus())
+                }
             }
         )
     }
