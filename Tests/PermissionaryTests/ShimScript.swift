@@ -15,6 +15,10 @@ final class ShimScript<Native: Sendable>: Sendable {
         self.states = Mutex(Array(states))
     }
 
+    init(sequence: [Native]) {
+        self.states = Mutex(sequence)
+    }
+
     func nextState() -> Native {
         states.withLock { remaining in
             remaining.count > 1 ? remaining.removeFirst() : remaining[0]

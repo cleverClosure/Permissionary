@@ -15,6 +15,7 @@ extension PermissionsClient {
             camera: .adapter(shim: .live, infoPlist: .live),
             locationWhenInUse: .adapter(shim: location, infoPlist: .live),
             locationAlways: .adapter(shim: location, infoPlist: .live),
+            notifications: .adapter(shim: .live),
             photosReadWrite: .adapter(shim: .live(access: .readWrite), infoPlist: .live),
             photosAddOnly: .adapter(shim: .live(access: .addOnly), infoPlist: .live),
             contacts: .adapter(shim: .live, infoPlist: .live),
