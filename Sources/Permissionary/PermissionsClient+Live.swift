@@ -10,6 +10,12 @@ import UIKit
 extension PermissionsClient {
     /// A client backed by the real system frameworks.
     public static let live = PermissionsClient(
+        camera: .adapter(shim: .live, infoPlist: .live),
+        photosReadWrite: .adapter(shim: .live(access: .readWrite), infoPlist: .live),
+        photosAddOnly: .adapter(shim: .live(access: .addOnly), infoPlist: .live),
+        contacts: .adapter(shim: .live, infoPlist: .live),
+        microphone: .adapter(shim: .live, infoPlist: .live),
+        tracking: .adapter(shim: .live, infoPlist: .live),
         openSettings: { await PermissionsClient.openSystemSettings() }
     )
 

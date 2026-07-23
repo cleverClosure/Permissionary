@@ -62,7 +62,7 @@ when the change needs explanation.
 
 ## Pull requests
 
-- Keep changes focused; one capability or concern per pull request
+- One pull request per epic: a PR covers a coherent body of related work, such as a group of structurally similar capabilities; only genuinely standalone changes ship alone
 - All CI checks must pass, including strict concurrency
 - Update documentation in the same pull request as behavior changes
 
