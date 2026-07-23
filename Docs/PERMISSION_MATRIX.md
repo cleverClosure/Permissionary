@@ -105,6 +105,8 @@ Changing camera access in Settings is expected to terminate a suspended app. Ver
 - Restricted
 - Unknown future value
 
+System-wide Location Services being disabled surfaces as denied even if the user never declined access for this app. Verify against the deployment SDK.
+
 ### Typed details
 
 Details include accuracy authorization (full or reduced) alongside the authorization status.
@@ -160,6 +162,8 @@ Details include accuracy authorization (full or reduced) alongside the authoriza
 - Denied
 - Restricted
 - Unknown future value
+
+System-wide Location Services being disabled surfaces as denied even if the user never declined access for this app. Verify against the deployment SDK.
 
 ### Typed details
 

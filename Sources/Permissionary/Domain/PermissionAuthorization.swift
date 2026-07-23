@@ -7,28 +7,33 @@
 
 /// A normalized authorization state shared by every permission.
 ///
-/// This is the small, capability-independent layer intended for generic
-/// application UI. Framework-specific semantics are preserved in each
-/// capability's typed status; see the permission matrix for the mapping
-/// from native states.
+/// Cases describe the access the system currently reports, not how that
+/// state came to be. Several native paths can produce the same normalized
+/// case. Framework-specific semantics are preserved in each capability's
+/// typed status, and available follow-up actions are described by
+/// `PermissionRecovery`, not by this state.
 public enum PermissionAuthorization: Sendable, Equatable {
-    /// The user has not been asked yet. A request may present a system prompt.
+    /// No authorization decision has been recorded yet. A request may
+    /// present a system prompt.
     case notDetermined
 
-    /// The user granted full access.
+    /// Full access is currently available. This includes grants made
+    /// without an explicit user decision, such as ephemeral notification
+    /// authorization or a provisional Always location grant.
     case authorized
 
-    /// A partial grant that permits reduced functionality, such as a limited
-    /// photo or contact selection, provisional notification delivery, or
-    /// when-in-use access viewed from the Always location capability.
+    /// Partial access is currently available, such as a limited photo or
+    /// contact selection, provisional notification delivery, or
+    /// when-in-use access evaluated against the Always location capability.
     case limited
 
-    /// The user declined access. The system will not prompt again; recovery
-    /// goes through Settings.
+    /// Access is not available and the system will not prompt. This
+    /// includes an explicit denial by the user as well as system-level
+    /// switches, such as Location Services being disabled.
     case denied
 
-    /// Access is blocked by a policy the user may not control, such as
-    /// parental controls or device management. Settings may not resolve it.
+    /// Access is blocked by a policy outside the user's control, such as
+    /// parental controls or device management.
     case restricted
 
     /// The capability's API cannot be used in the current environment.
