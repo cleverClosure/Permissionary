@@ -2,15 +2,15 @@
 //  READMEExamples.swift
 //  PermissionaryTests
 //
-//  Created by Tim Isaev
+//  Created by Timur Isaev
 //
 
 import Permissionary
 import SwiftUI
 
-// Compile-only mirrors of the code examples in README.md, kept byte-identical.
-// The release gate requires README examples to compile; when the public API
-// drifts from the documentation, this file breaks the build. Nothing here runs.
+// Compile-only mirrors of the code examples in README.md, kept aligned with
+// the documentation. The release gate requires these examples to compile;
+// when the public API drifts, this file breaks the build. Nothing here runs.
 
 func auditPermissionConfiguration() {
     for issue in PermissionsDiagnostics.configurationIssues() {
@@ -18,34 +18,41 @@ func auditPermissionConfiguration() {
     }
 }
 
-func enableCamera(permissions: PermissionsClient) async throws {
-    let status = await permissions.camera.status()
-    guard status.authorization == .notDetermined else {
-        return
-    }
+func enableCamera(permissions: PermissionsClient = .live) async throws {
+    let status = try await permissions.camera.request()
 
-    let result = try await permissions.camera.request()
-    if result.recovery == .openSettings {
-        await permissions.openSettings()
+    if status.authorization == .authorized {
+        print("Camera is ready")
     }
 }
 
 struct CameraStatusView: View {
-    @Environment(\.permissions) private var permissions
-    @State private var model: CameraPermissionModel?
+    private let permissions: PermissionsClient
+    @State private var model: CameraPermissionModel
+
+    init(permissions: PermissionsClient = .live) {
+        self.permissions = permissions
+        _model = State(
+            initialValue: CameraPermissionModel(permission: permissions.camera)
+        )
+    }
 
     var body: some View {
         VStack {
-            Text(model?.status.map { String(describing: $0.authorization) } ?? "loading")
+            Text(model.status.map { String(describing: $0.authorization) } ?? "Loading")
+
             Button("Enable Camera") {
                 Task {
-                    _ = try? await model?.request()
+                    _ = try? await model.request()
                 }
             }
-        }
-        .task {
-            if model == nil {
-                model = CameraPermissionModel(permission: permissions.camera)
+
+            if model.status?.recovery == .openSettings {
+                Button("Open Settings") {
+                    Task {
+                        await permissions.openSettings()
+                    }
+                }
             }
         }
     }
