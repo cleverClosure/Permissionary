@@ -1,3 +1,5 @@
+![Permissionary — SwiftUI-first permissions for iOS](Assets/permissionary-readme-header.png)
+
 # Permissionary
 
 A SwiftUI-first permissions library for iOS, built on Swift 6 strict concurrency.
