@@ -1,71 +1,86 @@
 # Contributing to Permissionary
 
-Thanks for your interest in contributing.
+Thanks for helping improve Permissionary.
 
-## Project phase
+Permissionary is a public Swift package with an evolving pre-1.0 API. Bug reports,
+documentation improvements, tests, device-specific findings, and focused code changes are
+welcome.
 
-Permissionary is in a pre-development design phase. The most valuable contributions right now are reviews of the design documents and real-world permission edge cases for the permission matrix.
+## Before you start
+
+- Search the existing issues before opening a new one.
+- Small fixes can go directly to a pull request.
+- For a new capability or a substantial public API change, open an issue first so the behavior
+  and native framework semantics can be agreed on before implementation.
+
+## Development setup
+
+1. Clone the repository and open `Package.swift` in Xcode.
+2. Select the `Permissionary` scheme and an available iOS Simulator.
+3. Run the test suite with **Product → Test**.
+4. Open `Examples/PermissionaryDemo/PermissionaryDemo.xcodeproj` to exercise permission flows in
+   the demo app. Native prompts and Settings recovery should also be verified on a physical
+   device when relevant.
+
+Before opening a pull request, format and lint the repository:
+
+```sh
+swift format --in-place --recursive Sources Tests Examples Package.swift
+swift format lint --strict --recursive Sources Tests Examples Package.swift
+```
+
+CI runs the strict formatting check, package tests on an iOS Simulator, a demo-app build, and a
+DocC build with warnings treated as errors.
 
 ## Ground rules
 
-- Docs first: behavior is specified in [Docs/PERMISSION_MATRIX.md](Docs/PERMISSION_MATRIX.md) before an adapter is implemented
-- Public API changes must update the API and architecture documentation
-- Swift 6 language mode with strict concurrency; no `@unchecked Sendable`
-- No external runtime dependencies
-- Code style is enforced by the toolchain's `swift format` using the repository's `.swift-format` configuration; run `swift format --in-place --recursive Sources Tests Package.swift` before pushing
-- Denial and restriction are values, not errors
-- Reading status must never trigger a system prompt
-- The library never opens Settings or requests permission automatically
+- Specify behavior in [Docs/PERMISSION_MATRIX.md](Docs/PERMISSION_MATRIX.md) before adding or
+  changing a capability.
+- Update the API and architecture documentation with public API changes.
+- Use Swift 6 strict concurrency without `@unchecked Sendable`.
+- Do not add external runtime dependencies.
+- Treat denial and restriction as values, not errors.
+- Reading status must never trigger a system prompt.
+- The library must never open Settings or request permission automatically.
 
 ## Adding or changing a capability
 
-1. Complete or update its section in the permission matrix
-2. Update the API and architecture documentation for public changes
-3. Implement the adapter behind the injectable native shim
-4. Add mapping tests for every native state, including unknown future values
-5. Add contract and coordination tests against a scripted shim
-6. Add or update the corresponding demo app screen
-7. Verify on a physical device and document the results
+1. Complete or update its section in the permission matrix.
+2. Update the API and architecture documentation for public changes.
+3. Implement the adapter behind the injectable native shim.
+4. Add mapping tests for every native state, including unknown future values.
+5. Add contract and coordination tests against a scripted shim.
+6. Add or update the corresponding demo-app screen.
+7. Verify the affected flows on a physical device and describe the results in the pull request.
 
 ## Git workflow
 
-The process is intentionally small:
+1. Branch from `main` using `feature/<name>`, `fix/<name>`, or `docs/<name>`.
+2. Make focused commits using the imperative mood, such as `Add camera status test`.
+3. Open a pull request describing the behavior change and how it was verified.
+4. Address review feedback and keep every CI check green.
 
-1. Branch from `main`: `feature/<name>`, `fix/<name>`, or `docs/<name>`
-2. Open a pull request; CI must pass
-3. Squash merge; delete the branch
-4. `main` is always releasable: green build and tests at every commit
-
-There are no long-lived branches. Releases are semantic-version tags on
-`main`; before 1.0, minor versions may contain breaking changes.
-
-Merging requires green checks. While the repository is private on a plan
-without server-side branch protection, this is enforced by tooling and
-convention:
-
-- From the terminal, merge with `Scripts/merge.sh <pr-number>`, which
-  waits for every check to pass and then squash-merges
-- From the web UI, merge only when all checks are green
-- Checks can take a few minutes to appear after a pull request opens; an
-  absent check is not a passing check
-
-When the repository becomes public, apply the stored ruleset to require
-the CI check server-side and block direct pushes to `main`:
-
-```sh
-gh api -X POST repos/cleverClosure/Permissionary/rulesets \
-  --input .github/ruleset-main.json
-```
-
-Commit messages use the imperative mood ("Add camera adapter") with a body
-when the change needs explanation.
+There are no long-lived branches. Pull requests are squash-merged, and `main` remains releasable
+at every commit. Releases are semantic-version tags; before 1.0, minor versions may contain
+breaking changes.
 
 ## Pull requests
 
-- One pull request per epic: a PR covers a coherent body of related work, such as a group of structurally similar capabilities; only genuinely standalone changes ship alone
-- All CI checks must pass, including strict concurrency
-- Update documentation in the same pull request as behavior changes
+- Keep each pull request focused on one coherent change.
+- Include tests for behavior changes and regressions.
+- Update documentation and the demo app when their behavior or examples change.
+- Describe manual device testing when the change affects a native permission prompt, Settings
+  recovery, or a framework-specific limited-access flow.
+- All CI checks must pass before merge.
 
 ## Reporting issues
 
-For behavior differences on specific devices or OS versions, include the iOS version, device model, and the exact permission state transitions observed.
+For a permission-state or recovery problem, include:
+
+- iOS version and device model, or the Simulator configuration
+- Permission capability and initial state
+- Exact sequence of prompts, Settings changes, and app lifecycle events
+- Expected and observed results
+- A minimal reproduction or sample code when possible
+
+Do not include secrets, provisioning profiles, or sensitive application data.
